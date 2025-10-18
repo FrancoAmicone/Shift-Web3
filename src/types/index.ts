@@ -23,8 +23,8 @@ export interface TransferFormData {
 }
 
 export interface TransactionStatus {
-  hash?: string;
-  status: 'idle' | 'pending' | 'success' | 'error';
+  txHash?: string;
+  status: 'idle' | 'pending' | 'mining' | 'success' | 'error';
   message?: string;
 }
 
