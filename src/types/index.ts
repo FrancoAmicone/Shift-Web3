@@ -12,9 +12,9 @@ export interface TokenBalance {
 export interface ClaimStatus {
   canClaim: boolean;
   timeUntilNextClaim: number;
-  lastClaimTime: number;
-  cooldownPeriod: number;
-  claimAmount: string;
+  lastClaimed: number;
+  claimInterval: number;
+  faucetAmount: string;
 }
 
 export interface TransferFormData {
@@ -23,9 +23,22 @@ export interface TransferFormData {
 }
 
 export interface TransactionStatus {
-  txHash?: string;
-  status: 'idle' | 'pending' | 'mining' | 'success' | 'error';
+  hash?: string;
+  status: 'idle' | 'pending' | 'success' | 'error';
   message?: string;
+}
+
+export interface WallMessage {
+  sender: string;
+  content: string;
+  timestamp: number;
+}
+
+export interface PostMessageStatus {
+  needsApproval: boolean;
+  isApproving: boolean;
+  isPosting: boolean;
+  error?: string;
 }
 
 // Extend Window interface for ethereum
