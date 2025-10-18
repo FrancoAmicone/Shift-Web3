@@ -68,20 +68,20 @@ export default function ClaimButton({ account, onClaimSuccess }: ClaimButtonProp
     try {
       setTxStatus({ status: 'pending', message: 'Preparando transacción...' });
 
-      const txHash = await claimTokens();
+      const tx = await claimTokens();
       
       setTxStatus({
-        status: 'mining',
+        status: 'pending',
         message: 'Transacción enviada. Esperando confirmación...',
-        txHash
+        hash: tx.hash
       });
 
-      await waitForTransaction(txHash);
+      await waitForTransaction(tx.hash);
 
       setTxStatus({
         status: 'success',
         message: '¡Tokens reclamados exitosamente!',
-        txHash
+        hash: tx.hash
       });
 
       // Refresh claim status after successful claim
@@ -163,20 +163,20 @@ export default function ClaimButton({ account, onClaimSuccess }: ClaimButtonProp
       {claimStatus && (
         <div className="space-y-6">
           {/* Claim Info */}
-          <div className="glass p-4 rounded-xl space-y-3">
+          <div className="glass-dark p-4 rounded-xl border border-white/10 space-y-3">
             <div className="flex justify-between items-center">
               <span className="text-sm text-white/60">Cantidad por claim:</span>
-              <span className="font-semibold text-white">{claimStatus.claimAmount} SHIFT</span>
+              <span className="font-semibold text-white">{claimStatus.faucetAmount} SHIFT</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-white/60">Cooldown:</span>
-              <span className="font-semibold text-white">{claimStatus.cooldownPeriod / 3600}h</span>
+              <span className="font-semibold text-white">{claimStatus.claimInterval / 3600}h</span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-white/60">Último claim:</span>
               <span className="font-semibold text-white">
-                {claimStatus.lastClaimTime > 0 
-                  ? new Date(claimStatus.lastClaimTime * 1000).toLocaleString('es-ES')
+                {claimStatus.lastClaimed > 0 
+                  ? new Date(claimStatus.lastClaimed * 1000).toLocaleString('es-ES')
                   : 'Nunca'}
               </span>
             </div>
@@ -197,7 +197,7 @@ export default function ClaimButton({ account, onClaimSuccess }: ClaimButtonProp
             </motion.div>
           )}
 
-          {txStatus.status === 'mining' && (
+          {txStatus.status === 'pending' && (
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -210,9 +210,9 @@ export default function ClaimButton({ account, onClaimSuccess }: ClaimButtonProp
                   <p className="text-purple-200/70 text-xs mt-1">{txStatus.message}</p>
                 </div>
               </div>
-              {txStatus.txHash && (
+              {txStatus.hash && (
                 <a
-                  href={`https://sepolia.etherscan.io/tx/${txStatus.txHash}`}
+                  href={`https://sepolia.etherscan.io/tx/${txStatus.hash}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-xs text-purple-300 hover:text-purple-200 underline break-all"
@@ -236,9 +236,9 @@ export default function ClaimButton({ account, onClaimSuccess }: ClaimButtonProp
                   <p className="text-green-200/70 text-xs mt-1">{txStatus.message}</p>
                 </div>
               </div>
-              {txStatus.txHash && (
+              {txStatus.hash && (
                 <a
-                  href={`https://sepolia.etherscan.io/tx/${txStatus.txHash}`}
+                  href={`https://sepolia.etherscan.io/tx/${txStatus.hash}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-xs text-green-300 hover:text-green-200 underline break-all"
@@ -271,15 +271,15 @@ export default function ClaimButton({ account, onClaimSuccess }: ClaimButtonProp
               className="w-full bg-gradient-to-r from-purple-600 to-violet-600 hover:from-purple-700 hover:to-violet-700 disabled:from-purple-400 disabled:to-violet-400 text-white font-medium py-4 px-6 rounded-xl transition-all duration-300 flex items-center justify-center shadow-lg shadow-purple-500/20 hover:shadow-purple-500/40 hover:scale-[1.02] disabled:scale-100"
             >
               <Gift className="w-5 h-5 mr-2" />
-              Reclamar {claimStatus.claimAmount} SHIFT
+              Reclamar {claimStatus.faucetAmount} SHIFT
             </button>
           ) : (
-            <div className="glass p-6 rounded-xl text-center">
+            <div className="glass-dark p-6 rounded-xl border border-white/10 text-center">
               <Clock className="w-12 h-12 text-purple-400 mx-auto mb-3" />
               <p className="text-white/60 text-sm mb-2">Próximo claim disponible en:</p>
               <p className="text-3xl font-bold text-white mb-1">{formatTime(countdown)}</p>
               <p className="text-xs text-white/40">
-                El faucet tiene un cooldown de {claimStatus.cooldownPeriod / 3600} horas
+                El faucet tiene un cooldown de {claimStatus.claimInterval / 3600} horas
               </p>
             </div>
           )}

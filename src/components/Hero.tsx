@@ -72,8 +72,8 @@ export default function Hero({ onConnect, isConnecting }: HeroProps) {
           transition={{ delay: 0.4, duration: 0.8 }}
           className="text-lg md:text-xl text-white/70 mb-12 max-w-2xl mx-auto leading-relaxed"
         >
-          Conecta tu wallet MetaMask para interactuar con el token SHIFT.
-          Consulta tu balance, reclama tokens del faucet y transfiere a otras direcciones.
+          Conecta tu wallet MetaMask para gestionar tokens SHIFT, reclamar del faucet
+          y publicar mensajes en el muro descentralizado de la comunidad.
         </motion.p>
 
         {/* Connect Button */}
@@ -137,9 +137,9 @@ export default function Hero({ onConnect, isConnecting }: HeroProps) {
               description: 'Reclama tokens de prueba directamente desde la app',
             },
             {
-              icon: '↔️',
-              title: 'Transferencias Rápidas',
-              description: 'Envía tokens a cualquier dirección de Ethereum',
+              icon: '🧱',
+              title: 'Muro Descentralizado',
+              description: 'Publica mensajes públicos pagando con tokens SHIFT',
             },
           ].map((feature, index) => (
             <motion.div
@@ -162,12 +162,13 @@ export default function Hero({ onConnect, isConnecting }: HeroProps) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1, duration: 1 }}
-        className="absolute bottom-8 left-1/2 transform -translate-x-1/2"
+        className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-2"
       >
+        <span className="text-white/60 text-xs font-medium">Ver Muro Público</span>
         <motion.div
           animate={{ y: [0, 10, 0] }}
           transition={{ duration: 2, repeat: Infinity }}
-          className="text-white/40 text-sm"
+          className="text-white/60 text-2xl"
         >
           ↓
         </motion.div>

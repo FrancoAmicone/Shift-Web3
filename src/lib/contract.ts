@@ -37,9 +37,9 @@ export const getClaimStatus = async (address: string): Promise<ClaimStatus> => {
     return {
       canClaim,
       timeUntilNextClaim,
-      lastClaimTime: Number(lastClaimed),
-      cooldownPeriod: Number(claimInterval),
-      claimAmount: formatTokenAmount(faucetAmount, decimals)
+      lastClaimed: Number(lastClaimed),
+      claimInterval: Number(claimInterval),
+      faucetAmount: formatTokenAmount(faucetAmount, decimals)
     };
   } catch (error) {
     console.error('Error getting claim status:', error);

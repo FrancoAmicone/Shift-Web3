@@ -53,20 +53,20 @@ export default function TransferForm({ account, onTransferSuccess }: TransferFor
     try {
       setTxStatus({ status: 'pending', message: 'Preparando transferencia...' });
 
-      const txHash = await transferTokens(recipient, amount);
+      const tx = await transferTokens(recipient, amount);
       
       setTxStatus({
-        status: 'mining',
+        status: 'pending',
         message: 'Transacción enviada. Esperando confirmación...',
-        txHash
+        hash: tx.hash
       });
 
-      await waitForTransaction(txHash);
+      await waitForTransaction(tx.hash);
 
       setTxStatus({
         status: 'success',
         message: '¡Transferencia completada exitosamente!',
-        txHash
+        hash: tx.hash
       });
 
       // Reset form and refresh data
@@ -126,7 +126,7 @@ export default function TransferForm({ account, onTransferSuccess }: TransferFor
             value={recipient}
             onChange={(e) => setRecipient(e.target.value)}
             placeholder="0x..."
-            className="w-full px-4 py-3 glass rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
+            className="w-full px-4 py-3 glass-dark rounded-xl border border-white/10 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
             disabled={txStatus.status !== 'idle'}
           />
         </div>
@@ -145,7 +145,7 @@ export default function TransferForm({ account, onTransferSuccess }: TransferFor
               placeholder="0.00"
               step="0.01"
               min="0"
-              className="w-full px-4 py-3 glass rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
+              className="w-full px-4 py-3 glass-dark rounded-xl border border-white/10 text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
               disabled={txStatus.status !== 'idle'}
             />
             <div className="absolute right-4 top-1/2 transform -translate-y-1/2 text-white/40 text-sm font-medium">
@@ -169,7 +169,7 @@ export default function TransferForm({ account, onTransferSuccess }: TransferFor
           </motion.div>
         )}
 
-        {txStatus.status === 'mining' && (
+        {txStatus.status === 'pending' && (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -182,9 +182,9 @@ export default function TransferForm({ account, onTransferSuccess }: TransferFor
                 <p className="text-purple-200/70 text-xs mt-1">{txStatus.message}</p>
               </div>
             </div>
-            {txStatus.txHash && (
+            {txStatus.hash && (
               <a
-                href={`https://sepolia.etherscan.io/tx/${txStatus.txHash}`}
+                href={`https://sepolia.etherscan.io/tx/${txStatus.hash}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-xs text-purple-300 hover:text-purple-200 underline break-all"
@@ -208,9 +208,9 @@ export default function TransferForm({ account, onTransferSuccess }: TransferFor
                 <p className="text-green-200/70 text-xs mt-1">{txStatus.message}</p>
               </div>
             </div>
-            {txStatus.txHash && (
+            {txStatus.hash && (
               <a
-                href={`https://sepolia.etherscan.io/tx/${txStatus.txHash}`}
+                href={`https://sepolia.etherscan.io/tx/${txStatus.hash}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-xs text-green-300 hover:text-green-200 underline break-all"
@@ -256,7 +256,7 @@ export default function TransferForm({ account, onTransferSuccess }: TransferFor
         </button>
 
         {/* Info Box */}
-        <div className="glass p-4 rounded-xl">
+        <div className="glass-dark p-4 rounded-xl border border-white/10">
           <p className="text-xs text-white/50 leading-relaxed">
             💡 <span className="font-medium">Tip:</span> Asegúrate de tener suficientes tokens SHIFT y ETH para el gas antes de realizar la transferencia.
           </p>
