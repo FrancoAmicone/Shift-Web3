@@ -121,7 +121,7 @@ export default function Balance({ account }: BalanceProps) {
       {balance && (
         <div className="space-y-6">
           {/* Main Balance Display */}
-          <div className="text-center py-6 glass rounded-xl">
+          <div className="text-center py-6 glass-dark rounded-xl border border-white/10">
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -141,7 +141,7 @@ export default function Balance({ account }: BalanceProps) {
           {/* Token Info Grid */}
           {tokenInfo && (
             <div className="grid grid-cols-2 gap-4">
-              <div className="glass p-4 rounded-xl">
+              <div className="glass-dark p-4 rounded-xl border border-white/10">
                 <div className="flex items-center gap-2 mb-2">
                   <TrendingUp className="w-4 h-4 text-purple-400" />
                   <span className="text-xs text-white/50">Nombre</span>
@@ -149,21 +149,21 @@ export default function Balance({ account }: BalanceProps) {
                 <span className="font-medium text-white">{tokenInfo.name}</span>
               </div>
               
-              <div className="glass p-4 rounded-xl">
+              <div className="glass-dark p-4 rounded-xl border border-white/10">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-xs text-white/50">Símbolo</span>
                 </div>
                 <span className="font-medium text-white">{tokenInfo.symbol}</span>
               </div>
               
-              <div className="glass p-4 rounded-xl">
+              <div className="glass-dark p-4 rounded-xl border border-white/10">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-xs text-white/50">Decimales</span>
                 </div>
                 <span className="font-medium text-white">{tokenInfo.decimals}</span>
               </div>
               
-              <div className="glass p-4 rounded-xl">
+              <div className="glass-dark p-4 rounded-xl border border-white/10">
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-xs text-white/50">Supply Total</span>
                 </div>
