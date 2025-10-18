@@ -177,4 +177,4 @@ Este proyecto te ayuda a aprender:
 
 ---
 
-**¡Disfruta construyendo en Web3! 🚀**
+**¡Disfruta construyendo en Web3 gracias! 🚀**
