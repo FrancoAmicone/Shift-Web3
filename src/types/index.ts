@@ -12,9 +12,9 @@ export interface TokenBalance {
 export interface ClaimStatus {
   canClaim: boolean;
   timeUntilNextClaim: number;
-  lastClaimed: number;
-  claimInterval: number;
-  faucetAmount: string;
+  lastClaimTime: number;
+  cooldownPeriod: number;
+  claimAmount: string;
 }
 
 export interface TransferFormData {
