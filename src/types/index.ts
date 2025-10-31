@@ -41,6 +41,18 @@ export interface PostMessageStatus {
   error?: string;
 }
 
+export interface UserStats {
+  address: string;
+  totalMessages: number;
+  dailyMessages: number;
+}
+
+export interface DailyReward {
+  user: string;
+  amount: string;
+  position: number;
+}
+
 // Extend Window interface for ethereum
 declare global {
   interface Window {

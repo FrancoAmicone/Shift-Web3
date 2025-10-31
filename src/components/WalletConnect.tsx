@@ -26,6 +26,22 @@ export default function WalletConnect({
     if (isConnected) {
       checkNetworkStatus();
     }
+
+    // Escuchar cambios de red
+    const handleChainChanged = () => {
+      console.log('Network changed in WalletConnect');
+      if (isConnected) {
+        checkNetworkStatus();
+      }
+    };
+
+    if (typeof window !== 'undefined' && window.ethereum) {
+      window.ethereum.on('chainChanged', handleChainChanged);
+      
+      return () => {
+        window.ethereum?.removeListener('chainChanged', handleChainChanged);
+      };
+    }
   }, [isConnected]);
 
   const checkNetworkStatus = async () => {
@@ -53,8 +69,7 @@ export default function WalletConnect({
         localStorage.setItem('wallet_connected', 'true');
         localStorage.setItem('wallet_account', accounts[0]);
         
-        // Switch to Sepolia if needed
-        await switchToSepolia();
+        // Solo verificar la red, NO cambiar automáticamente
         await checkNetworkStatus();
       }
     } catch (error: any) {
@@ -71,6 +86,14 @@ export default function WalletConnect({
 
   const switchToSepolia = async () => {
     if (!window.ethereum) return;
+    
+    // Verificar primero si ya está en Sepolia
+    const isCorrect = await checkNetwork();
+    if (isCorrect) {
+      setIsCorrectNetwork(true);
+      console.log('Already on Sepolia network');
+      return;
+    }
     
     try {
       await window.ethereum.request({
@@ -91,9 +114,11 @@ export default function WalletConnect({
           console.error('Error adding Sepolia network:', addError);
           alert('Error agregando la red Sepolia');
         }
+      } else if (error.code === 4001) {
+        // Usuario rechazó el cambio
+        console.log('User rejected network switch');
       } else {
         console.error('Error switching to Sepolia:', error);
-        alert('Error cambiando a la red Sepolia');
       }
     }
   };

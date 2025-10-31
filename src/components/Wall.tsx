@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getMessages, getMessageCount } from '@/lib/wall';
-import { WallMessage } from '@/types';
+import { getMessages, getMessageCount, getUserStats, listenToUserStatsUpdated, listenToDailyRewards } from '@/lib/wall';
+import { WallMessage, UserStats, DailyReward } from '@/types';
+import SendMessage from './SendMessage';
 
 interface WallProps {
   refreshTrigger?: number;
@@ -13,6 +14,8 @@ export default function Wall({ refreshTrigger = 0 }: WallProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string>('');
   const [messageCount, setMessageCount] = useState(0);
+  const [userStats, setUserStats] = useState<Record<string, UserStats>>({});
+  const [dailyRewards, setDailyRewards] = useState<DailyReward[]>([]);
 
   useEffect(() => {
     fetchMessages();
@@ -21,8 +24,27 @@ export default function Wall({ refreshTrigger = 0 }: WallProps) {
     const interval = setInterval(() => {
       fetchMessages(true);
     }, 10000);
+
+    // Set up event listeners
+    const unsubscribeStats = listenToUserStatsUpdated((stats) => {
+      setUserStats(prev => ({
+        ...prev,
+        [stats.address]: stats
+      }));
+    });
+
+    const unsubscribeRewards = listenToDailyRewards((reward) => {
+      setDailyRewards(prev => {
+        const newRewards = prev.filter(r => r.position !== reward.position);
+        return [...newRewards, reward].sort((a, b) => a.position - b.position);
+      });
+    });
     
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+      unsubscribeStats();
+      unsubscribeRewards();
+    };
   }, [refreshTrigger]);
 
   const fetchMessages = async (silent = false) => {
@@ -37,6 +59,17 @@ export default function Wall({ refreshTrigger = 0 }: WallProps) {
       
       setMessages(msgs);
       setMessageCount(count);
+
+      // Fetch stats for unique senders
+      const uniqueSenders = Array.from(new Set(msgs.map(m => m.sender)));
+      const stats = await Promise.all(uniqueSenders.map(getUserStats));
+      
+      const statsMap = stats.reduce((acc, stat) => {
+        acc[stat.address] = stat;
+        return acc;
+      }, {} as Record<string, UserStats>);
+      
+      setUserStats(statsMap);
     } catch (err: any) {
       console.error('Error fetching messages:', err);
       setError('Error cargando mensajes');
@@ -47,6 +80,13 @@ export default function Wall({ refreshTrigger = 0 }: WallProps) {
 
   const formatAddress = (address: string) => {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
+
+  const getDailyLeaderboard = () => {
+    return Object.values(userStats)
+      .sort((a, b) => b.dailyMessages - a.dailyMessages)
+      .filter(user => user.dailyMessages > 0)
+      .slice(0, 10); // Top 10 users
   };
 
   const formatTimestamp = (timestamp: number) => {
@@ -115,9 +155,74 @@ export default function Wall({ refreshTrigger = 0 }: WallProps) {
         </div>
       </div>
 
-      <p className="text-white/70 text-sm mb-6">
-        Mensajes públicos de la comunidad Shift. Cada mensaje cuesta 1 SHIFT. 💬
-      </p>
+      {/* Daily Rewards Section */}
+      {dailyRewards.length > 0 && (
+        <div className="glass-dark rounded-xl p-4 mb-6 border border-white/10">
+          <h3 className="text-lg font-semibold text-white mb-3">🏆 Top 3 del día</h3>
+          <div className="space-y-2">
+            {dailyRewards.map((reward) => (
+              <div key={reward.position} className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">
+                    {reward.position === 0 ? "🥇" : reward.position === 1 ? "🥈" : "🥉"}
+                  </span>
+                  <span className="font-mono text-white/80">{formatAddress(reward.user)}</span>
+                </div>
+                <span className="text-purple-400 font-medium">{reward.amount} SHIFT</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Daily Leaderboard Section */}
+      {getDailyLeaderboard().length > 0 && (
+        <div className="glass-dark rounded-xl p-4 mb-6 border border-white/10">
+          <h3 className="text-lg font-semibold text-white mb-3">📊 Ranking de mensajes del día</h3>
+          <div className="space-y-2">
+            {getDailyLeaderboard().map((user, index) => (
+              <div key={user.address} className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-mono text-white/50 w-6">#{index + 1}</span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-400 to-pink-500 flex items-center justify-center text-white text-xs font-bold">
+                      {user.address.slice(2, 4).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="font-mono text-xs text-white/80">
+                        {formatAddress(user.address)}
+                      </p>
+                      <p className="text-xs text-purple-400">
+                        {user.dailyMessages} mensajes hoy
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <a
+                  href={`https://sepolia.etherscan.io/address/${user.address}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-white/40 hover:text-purple-400 text-xs"
+                  title="Ver en Etherscan"
+                >
+                  🔗
+                </a>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Send Message Form */}
+      <SendMessage onMessageSent={() => fetchMessages()} />
+
+      {/* Messages List */}
+      <h2 className="text-2xl font-semibold mt-8 mb-6 text-white flex items-center">
+        💬 Mensajes
+        <span className="ml-3 text-sm font-normal text-white/60">
+          {messageCount} {messageCount === 1 ? 'mensaje' : 'mensajes'}
+        </span>
+      </h2>
 
       {messages.length === 0 ? (
         <div className="text-center py-12 glass-dark rounded-xl border border-white/10">
@@ -145,9 +250,16 @@ export default function Wall({ refreshTrigger = 0 }: WallProps) {
                     <p className="font-mono text-xs text-white/80">
                       {formatAddress(message.sender)}
                     </p>
-                    <p className="text-xs text-white/50">
-                      {formatTimestamp(message.timestamp)}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-xs text-white/50">
+                        {formatTimestamp(message.timestamp)}
+                      </p>
+                      {userStats[message.sender] && (
+                        <p className="text-xs text-purple-400">
+                          {userStats[message.sender].dailyMessages} hoy · {userStats[message.sender].totalMessages} total
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <a
