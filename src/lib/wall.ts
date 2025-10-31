@@ -1,6 +1,6 @@
 import { ethers } from 'ethers';
 import { WALL_CONTRACT_ADDRESS, WALL_CONTRACT_ABI, CONTRACT_ADDRESS, CONTRACT_ABI } from '@/constants/contract';
-import { WallMessage } from '@/types';
+import { WallMessage, UserStats, DailyReward } from '@/types';
 import { getProvider, getSigner } from './ethers';
 
 export const getWallContract = async (withSigner = false) => {
@@ -119,4 +119,73 @@ export const getMessageCount = async (): Promise<number> => {
     console.error('Error getting message count:', error);
     return 0;
   }
+};
+
+export const getUserStats = async (address: string): Promise<UserStats> => {
+  try {
+    const contract = await getWallContract();
+    const [totalMessages, dailyMessages] = await Promise.all([
+      contract.messageCount(address),
+      contract.dailyMessageCount(address)
+    ]);
+    
+    return {
+      address,
+      totalMessages: Number(totalMessages),
+      dailyMessages: Number(dailyMessages)
+    };
+  } catch (error) {
+    console.error('Error getting user stats:', error);
+    throw error;
+  }
+};
+
+export const listenToUserStatsUpdated = (callback: (stats: UserStats) => void) => {
+  const handleEvent = (user: string, totalMessages: bigint, dailyMessages: bigint) => {
+    callback({
+      address: user,
+      totalMessages: Number(totalMessages),
+      dailyMessages: Number(dailyMessages)
+    });
+  };
+
+  const setupListener = async () => {
+    const contract = await getWallContract();
+    contract.on('UserStatsUpdated', handleEvent);
+  };
+
+  setupListener();
+
+  return () => {
+    const removeListener = async () => {
+      const contract = await getWallContract();
+      contract.off('UserStatsUpdated', handleEvent);
+    };
+    removeListener();
+  };
+};
+
+export const listenToDailyRewards = (callback: (reward: DailyReward) => void) => {
+  const handleEvent = (user: string, amount: bigint, position: number) => {
+    callback({
+      user,
+      amount: ethers.formatUnits(amount, 18),
+      position
+    });
+  };
+
+  const setupListener = async () => {
+    const contract = await getWallContract();
+    contract.on('DailyReward', handleEvent);
+  };
+
+  setupListener();
+
+  return () => {
+    const removeListener = async () => {
+      const contract = await getWallContract();
+      contract.off('DailyReward', handleEvent);
+    };
+    removeListener();
+  };
 };

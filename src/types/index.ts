@@ -24,7 +24,7 @@ export interface TransferFormData {
 
 export interface TransactionStatus {
   hash?: string;
-  status: 'idle' | 'pending' | 'success' | 'error';
+  status: 'idle' | 'pending' | 'mining' | 'success' | 'error';
   message?: string;
 }
 
@@ -39,6 +39,18 @@ export interface PostMessageStatus {
   isApproving: boolean;
   isPosting: boolean;
   error?: string;
+}
+
+export interface UserStats {
+  address: string;
+  totalMessages: number;
+  dailyMessages: number;
+}
+
+export interface DailyReward {
+  user: string;
+  amount: string;
+  position: number;
 }
 
 // Extend Window interface for ethereum
