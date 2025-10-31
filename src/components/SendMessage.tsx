@@ -40,9 +40,20 @@ export default function SendMessage({ onMessageSent }: SendMessageProps) {
     try {
       setTxStatus({ status: 'pending', message: 'Verificando aprobación...' });
 
+      // Get current account
+      if (!window.ethereum) {
+        throw new Error('MetaMask no está instalado');
+      }
+      
+      const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+      if (!accounts || accounts.length === 0) {
+        throw new Error('No hay cuenta conectada');
+      }
+      const currentAccount = accounts[0];
+
       // Get post cost and check allowance
       const cost = await getPostCost();
-      const allowance = await checkAllowance(window.ethereum?.selectedAddress);
+      const allowance = await checkAllowance(currentAccount);
 
       // If allowance is less than cost, request approval
       if (allowance < ethers.parseUnits(cost, 18)) {
@@ -58,7 +69,7 @@ export default function SendMessage({ onMessageSent }: SendMessageProps) {
       setTxStatus({
         status: 'success',
         message: '¡Mensaje enviado! Se actualizará en unos segundos.',
-        txHash
+        hash: txHash
       });
 
       // Limpiar el formulario inmediatamente
@@ -75,7 +86,7 @@ export default function SendMessage({ onMessageSent }: SendMessageProps) {
         setTxStatus({
           status: 'success',
           message: '¡Mensaje publicado y confirmado!',
-          txHash
+          hash: txHash
         });
 
         // Resetear después de 3 segundos
@@ -176,9 +187,9 @@ export default function SendMessage({ onMessageSent }: SendMessageProps) {
                 <p className="text-purple-200/70 text-xs mt-1">{txStatus.message}</p>
               </div>
             </div>
-            {txStatus.txHash && (
+            {txStatus.hash && (
               <a
-                href={`https://sepolia.etherscan.io/tx/${txStatus.txHash}`}
+                href={`https://sepolia.etherscan.io/tx/${txStatus.hash}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-xs text-purple-300 hover:text-purple-200 underline break-all"
@@ -202,9 +213,9 @@ export default function SendMessage({ onMessageSent }: SendMessageProps) {
                 <p className="text-green-200/70 text-xs mt-1">{txStatus.message}</p>
               </div>
             </div>
-            {txStatus.txHash && (
+            {txStatus.hash && (
               <a
-                href={`https://sepolia.etherscan.io/tx/${txStatus.txHash}`}
+                href={`https://sepolia.etherscan.io/tx/${txStatus.hash}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-xs text-green-300 hover:text-green-200 underline break-all"
